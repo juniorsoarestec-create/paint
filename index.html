@@ -1,1285 +1,963 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>✏️ Desenho Kids</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
-      background: linear-gradient(135deg, #fff0f5 0%, #f0f4ff 100%);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    header {
-      background: linear-gradient(90deg, #ff6eb4, #a78bfa, #60c8f5);
-      padding: 12px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    header h1 {
-      color: white;
-      font-size: 1.6rem;
-      text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
-    }
-
-    header .stars {
-      font-size: 1.4rem;
-      animation: float 2s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
-
-    /* ─── TABS ─── */
-    .tabs {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      padding: 14px;
-      background: rgba(255,255,255,0.6);
-      backdrop-filter: blur(6px);
-    }
-
-    .tab-btn {
-      padding: 8px 22px;
-      border: none;
-      border-radius: 30px;
-      font-family: inherit;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all .2s;
-      background: #e2e8f0;
-      color: #555;
-      font-weight: bold;
-    }
-
-    .tab-btn.active {
-      background: linear-gradient(135deg, #ff6eb4, #a78bfa);
-      color: white;
-      box-shadow: 0 4px 14px rgba(167,139,250,0.5);
-      transform: scale(1.05);
-    }
-
-    /* ─── CANVAS PAGE ─── */
-    #page-draw { display: flex; flex-direction: column; align-items: center; padding: 16px; gap: 14px; }
-
-    .toolbar {
-      background: white;
-      border-radius: 20px;
-      padding: 12px 16px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: center;
-      max-width: 680px;
-      width: 100%;
-    }
-
-    .tool-group {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .tool-group label {
-      font-size: .8rem;
-      color: #888;
-      font-weight: bold;
-    }
-
-    .tool-btn {
-      width: 42px;
-      height: 42px;
-      border: 3px solid transparent;
-      border-radius: 12px;
-      font-size: 1.3rem;
-      cursor: pointer;
-      background: #f1f5f9;
-      transition: all .18s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .tool-btn:hover { transform: scale(1.1); background: #e2e8f0; }
-    .tool-btn.active { border-color: #a78bfa; background: #ede9fe; transform: scale(1.1); }
-
-    /* color swatches */
-    .color-swatch {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 3px solid transparent;
-      transition: all .18s;
-    }
-
-    .color-swatch:hover { transform: scale(1.2); }
-    .color-swatch.active { border-color: #1e293b; transform: scale(1.2); box-shadow: 0 0 0 2px white, 0 0 0 4px #1e293b; }
-
-    input[type="color"] {
-      width: 36px;
-      height: 36px;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      padding: 0;
-      background: none;
-    }
-
-    input[type="range"] {
-      width: 80px;
-      accent-color: #a78bfa;
-    }
-
-    .size-preview {
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .size-dot {
-      background: #1e293b;
-      border-radius: 50%;
-      transition: all .2s;
-    }
-
-    #canvas-wrap {
-      position: relative;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-      cursor: crosshair;
-    }
-
-    #main-canvas {
-      display: block;
-      background: white;
-      touch-action: none;
-    }
-
-    .canvas-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .action-btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 30px;
-      font-family: inherit;
-      font-size: .95rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all .2s;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.12);
-    }
-
-    .action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.18); }
-
-    .btn-clear { background: #fca5a5; color: #7f1d1d; }
-    .btn-undo  { background: #fde68a; color: #78350f; }
-    .btn-save  { background: #6ee7b7; color: #064e3b; }
-    .btn-fill  { background: #93c5fd; color: #1e3a5f; }
-
-    /* ─── TUTORIALS PAGE ─── */
-    #page-tutorials { display: none; padding: 16px; max-width: 900px; margin: 0 auto; }
-
-    .tut-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 16px;
-      margin-top: 10px;
-    }
-
-    .tut-card {
-      background: white;
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-      cursor: pointer;
-      transition: all .2s;
-    }
-
-    .tut-card:hover { transform: translateY(-5px); box-shadow: 0 10px 28px rgba(0,0,0,0.15); }
-
-    .tut-thumb {
-      width: 100%;
-      height: 130px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 4rem;
-    }
-
-    .tut-info { padding: 10px 14px 14px; }
-    .tut-info h3 { font-size: 1rem; color: #1e293b; }
-    .tut-info p { font-size: .78rem; color: #94a3b8; margin-top: 3px; }
-
-    .tut-stars { color: #fbbf24; font-size: .9rem; }
-
-    /* ─── MODAL TUTORIAL ─── */
-    #tut-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.55);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    #tut-modal.open { display: flex; }
-
-    .modal-box {
-      background: white;
-      border-radius: 24px;
-      max-width: 480px;
-      width: 100%;
-      padding: 24px;
-      position: relative;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 14px; right: 16px;
-      background: #f1f5f9;
-      border: none;
-      border-radius: 50%;
-      width: 34px; height: 34px;
-      font-size: 1.1rem;
-      cursor: pointer;
-      font-weight: bold;
-      color: #64748b;
-    }
-
-    .modal-close:hover { background: #fca5a5; color: #7f1d1d; }
-
-    .modal-box h2 { font-size: 1.4rem; color: #1e293b; margin-bottom: 6px; }
-
-    .step-indicator {
-      display: flex;
-      gap: 6px;
-      margin: 14px 0 10px;
-    }
-
-    .step-dot {
-      width: 12px; height: 12px;
-      border-radius: 50%;
-      background: #e2e8f0;
-      transition: all .2s;
-    }
-
-    .step-dot.active { background: #a78bfa; transform: scale(1.25); }
-    .step-dot.done   { background: #6ee7b7; }
-
-    .step-canvas-wrap {
-      border-radius: 14px;
-      overflow: hidden;
-      border: 3px solid #e2e8f0;
-      margin: 12px 0;
-    }
-
-    #tut-canvas { display: block; background: #fffaf0; width: 100%; }
-
-    .step-desc {
-      font-size: .95rem;
-      color: #475569;
-      line-height: 1.5;
-      background: #f8fafc;
-      border-radius: 12px;
-      padding: 12px 14px;
-      margin-bottom: 14px;
-      border-left: 4px solid #a78bfa;
-    }
-
-    .step-nav {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    .step-nav button {
-      padding: 10px 24px;
-      border: none;
-      border-radius: 30px;
-      font-family: inherit;
-      font-size: .95rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all .2s;
-    }
-
-    .btn-prev { background: #e2e8f0; color: #475569; }
-    .btn-next { background: linear-gradient(135deg, #ff6eb4, #a78bfa); color: white; box-shadow: 0 4px 12px rgba(167,139,250,0.4); }
-
-    .btn-next:hover { transform: scale(1.05); }
-    .btn-prev:hover { background: #cbd5e1; }
-
-    .btn-draw-it {
-      display: block;
-      width: 100%;
-      margin-top: 10px;
-      padding: 12px;
-      background: linear-gradient(135deg, #34d399, #60c8f5);
-      border: none;
-      border-radius: 30px;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: bold;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(52,211,153,0.4);
-      transition: all .2s;
-    }
-
-    .btn-draw-it:hover { transform: scale(1.03); }
-
-    /* ─── GALLERY PAGE ─── */
-    #page-gallery { display: none; padding: 16px; max-width: 900px; margin: 0 auto; }
-    #page-gallery h2 { text-align: center; color: #7c3aed; margin-bottom: 16px; font-size: 1.4rem; }
-
-    #gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 14px;
-    }
-
-    .gallery-item {
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
-      transition: all .2s;
-    }
-
-    .gallery-item:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,0.15); }
-    .gallery-item img { width: 100%; display: block; }
-
-    .gallery-item-footer {
-      padding: 8px 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .gallery-item-footer span { font-size: .78rem; color: #94a3b8; }
-
-    .del-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 1rem;
-      opacity: .5;
-      transition: opacity .2s;
-    }
-
-    .del-btn:hover { opacity: 1; }
-
-    .empty-gallery {
-      text-align: center;
-      color: #94a3b8;
-      font-size: 1.1rem;
-      margin-top: 40px;
-    }
-
-    /* ─── CONGRATS BANNER ─── */
-    #congrats {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #congrats.open { display: flex; }
-
-    .congrats-box {
-      background: white;
-      border-radius: 30px;
-      padding: 40px 32px;
-      text-align: center;
-      max-width: 320px;
-      animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
-    }
-
-    @keyframes popIn {
-      from { transform: scale(.5); opacity: 0; }
-      to   { transform: scale(1);  opacity: 1; }
-    }
-
-    .congrats-box .emoji { font-size: 4rem; }
-    .congrats-box h2 { font-size: 1.6rem; color: #7c3aed; margin: 10px 0 6px; }
-    .congrats-box p  { color: #64748b; margin-bottom: 18px; }
-
-    .congrats-close {
-      background: linear-gradient(135deg, #ff6eb4, #a78bfa);
-      color: white;
-      border: none;
-      padding: 12px 32px;
-      border-radius: 30px;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 480px) {
-      header h1 { font-size: 1.2rem; }
-      .tool-btn { width: 36px; height: 36px; font-size: 1.1rem; }
-      .color-swatch { width: 26px; height: 26px; }
-      input[type="range"] { width: 60px; }
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>Desenho Kids</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Comic Sans MS',cursive;background:linear-gradient(135deg,#fff0f5,#f0f4ff);min-height:100vh;overflow-x:hidden;}
+
+/* HEADER */
+header{background:linear-gradient(90deg,#ff6eb4,#a78bfa,#60c8f5);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 12px rgba(0,0,0,.2);}
+header h1{color:#fff;font-size:1.5rem;text-shadow:2px 2px 0 rgba(0,0,0,.15);}
+.hstar{font-size:1.4rem;}
+
+/* TABS */
+.tabs{display:flex;justify-content:center;gap:10px;padding:12px;background:rgba(255,255,255,.7);}
+.tab-btn{padding:8px 22px;border:none;border-radius:30px;font-family:inherit;font-size:1rem;font-weight:bold;cursor:pointer;background:#e2e8f0;color:#555;transition:all .2s;}
+.tab-btn.active{background:linear-gradient(135deg,#ff6eb4,#a78bfa);color:#fff;box-shadow:0 4px 14px rgba(167,139,250,.5);transform:scale(1.05);}
+
+/* PAGES */
+.page{display:none;padding:14px;}
+.page.active{display:block;}
+
+/* ── DRAW PAGE ── */
+#page-draw{display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px;}
+#page-draw.active{display:flex;}
+
+.toolbar{background:#fff;border-radius:20px;padding:12px 16px;box-shadow:0 4px 16px rgba(0,0,0,.1);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;max-width:700px;width:100%;}
+
+/* tool buttons */
+.tool-btn{width:44px;height:44px;border:3px solid transparent;border-radius:12px;font-size:1.4rem;cursor:pointer;background:#f1f5f9;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+.tool-btn:hover{background:#e2e8f0;transform:scale(1.1);}
+.tool-btn.active{border-color:#a78bfa;background:#ede9fe;transform:scale(1.1);}
+
+/* color grid */
+.color-grid{display:flex;flex-wrap:wrap;gap:5px;max-width:200px;}
+.swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .2s;flex-shrink:0;}
+.swatch:hover{transform:scale(1.2);}
+.swatch.picked{border-color:#1e293b;transform:scale(1.25);box-shadow:0 0 0 2px #fff,0 0 0 4px #1e293b;}
+
+input[type=color]{width:36px;height:36px;border:none;border-radius:50%;cursor:pointer;padding:2px;background:#f1f5f9;}
+input[type=range]{width:80px;accent-color:#a78bfa;cursor:pointer;}
+
+.tg-label{font-size:.75rem;color:#94a3b8;font-weight:bold;text-align:center;}
+.tg{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.tg-row{display:flex;gap:5px;align-items:center;}
+
+/* canvas */
+#canvas-wrap{position:relative;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.18);touch-action:none;cursor:crosshair;}
+#main-canvas{display:block;background:#fff;}
+
+/* action buttons */
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.act-btn{padding:10px 18px;border:none;border-radius:30px;font-family:inherit;font-size:.9rem;font-weight:bold;cursor:pointer;transition:all .2s;box-shadow:0 3px 10px rgba(0,0,0,.12);}
+.act-btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.18);}
+.btn-undo{background:#fde68a;color:#78350f;}
+.btn-fill{background:#93c5fd;color:#1e3a5f;}
+.btn-clear{background:#fca5a5;color:#7f1d1d;}
+.btn-save{background:#6ee7b7;color:#064e3b;}
+
+/* size dot preview */
+#size-preview{width:30px;height:30px;display:flex;align-items:center;justify-content:center;}
+#size-dot{background:#1e293b;border-radius:50%;transition:all .2s;}
+
+/* ── TUTORIALS PAGE ── */
+#page-tutorials{max-width:900px;margin:0 auto;}
+.tut-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-top:4px;}
+.tut-card{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.1);cursor:pointer;transition:all .2s;}
+.tut-card:hover{transform:translateY(-5px);box-shadow:0 10px 26px rgba(0,0,0,.15);}
+.tut-thumb{width:100%;height:120px;display:flex;align-items:center;justify-content:center;font-size:3.5rem;}
+.tut-info{padding:10px 14px 14px;}
+.tut-info h3{font-size:1rem;color:#1e293b;}
+.tut-diff{font-size:.78rem;color:#f59e0b;margin-top:2px;}
+
+/* ── TUTORIAL MODAL ── */
+#tut-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;padding:16px;}
+#tut-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:24px;max-width:500px;width:100%;padding:24px;position:relative;max-height:90vh;overflow-y:auto;}
+.modal-close{position:absolute;top:14px;right:14px;background:#f1f5f9;border:none;border-radius:50%;width:34px;height:34px;font-size:1.1rem;font-weight:bold;cursor:pointer;color:#64748b;}
+.modal-close:hover{background:#fca5a5;color:#7f1d1d;}
+.modal h2{font-size:1.3rem;color:#1e293b;margin-bottom:8px;}
+.step-dots{display:flex;gap:6px;margin:10px 0;}
+.sdot{width:12px;height:12px;border-radius:50%;background:#e2e8f0;transition:all .2s;}
+.sdot.active{background:#a78bfa;transform:scale(1.3);}
+.sdot.done{background:#6ee7b7;}
+#tut-canvas{display:block;width:100%;border-radius:12px;border:3px solid #e2e8f0;background:#fffaf0;}
+.step-desc{font-size:.93rem;color:#475569;line-height:1.6;background:#f8fafc;border-radius:12px;padding:12px 14px;margin:10px 0;border-left:4px solid #a78bfa;}
+.step-nav{display:flex;gap:10px;justify-content:center;margin-top:6px;}
+.step-nav button{padding:10px 22px;border:none;border-radius:30px;font-family:inherit;font-size:.9rem;font-weight:bold;cursor:pointer;transition:all .2s;}
+.btn-prev{background:#e2e8f0;color:#475569;}
+.btn-prev:hover{background:#cbd5e1;}
+.btn-next{background:linear-gradient(135deg,#ff6eb4,#a78bfa);color:#fff;box-shadow:0 4px 12px rgba(167,139,250,.4);}
+.btn-next:hover{transform:scale(1.05);}
+.btn-draw-it{display:block;width:100%;margin-top:10px;padding:12px;background:linear-gradient(135deg,#34d399,#60c8f5);border:none;border-radius:30px;font-family:inherit;font-size:1rem;font-weight:bold;color:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(52,211,153,.4);transition:all .2s;}
+.btn-draw-it:hover{transform:scale(1.03);}
+
+/* ── GALLERY ── */
+#page-gallery{max-width:900px;margin:0 auto;}
+#page-gallery h2{text-align:center;color:#7c3aed;font-size:1.3rem;margin-bottom:14px;}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+.gitem{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.1);transition:all .2s;}
+.gitem:hover{transform:translateY(-4px);}
+.gitem img{width:100%;display:block;}
+.gitem-footer{padding:7px 10px;display:flex;justify-content:space-between;align-items:center;}
+.gitem-footer span{font-size:.75rem;color:#94a3b8;}
+.del-btn{background:none;border:none;cursor:pointer;font-size:1rem;opacity:.5;}
+.del-btn:hover{opacity:1;}
+.empty-msg{text-align:center;color:#94a3b8;font-size:1.1rem;margin-top:40px;}
+
+/* ── CONGRATS ── */
+#congrats-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;}
+#congrats-overlay.open{display:flex;}
+.congrats-box{background:#fff;border-radius:30px;padding:40px 30px;text-align:center;max-width:300px;animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+.congrats-box .big{font-size:3.5rem;}
+.congrats-box h2{font-size:1.5rem;color:#7c3aed;margin:10px 0 6px;}
+.congrats-box p{color:#64748b;margin-bottom:16px;}
+.congrats-close{background:linear-gradient(135deg,#ff6eb4,#a78bfa);color:#fff;border:none;padding:12px 30px;border-radius:30px;font-family:inherit;font-size:1rem;font-weight:bold;cursor:pointer;}
+
+@media(max-width:500px){
+  header h1{font-size:1.1rem;}
+  .tool-btn{width:38px;height:38px;font-size:1.1rem;}
+  .swatch{width:24px;height:24px;}
+  input[type=range]{width:60px;}
+  .color-grid{max-width:168px;}
+}
+</style>
 </head>
 <body>
 
 <header>
   <h1>✏️ Desenho Kids</h1>
-  <div class="stars">⭐🎨🌈</div>
+  <span class="hstar">⭐🎨🌈</span>
 </header>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="showPage('draw')">🖌️ Desenhar</button>
-  <button class="tab-btn" onclick="showPage('tutorials')">📖 Tutoriais</button>
-  <button class="tab-btn" onclick="showPage('gallery')">🖼️ Galeria</button>
+  <button class="tab-btn active" onclick="showPage('draw',this)">🖌️ Desenhar</button>
+  <button class="tab-btn" onclick="showPage('tutorials',this)">📖 Tutoriais</button>
+  <button class="tab-btn" onclick="showPage('gallery',this)">🖼️ Galeria</button>
 </div>
 
-<!-- ══════════ DRAW PAGE ══════════ -->
-<div id="page-draw">
+<!-- ══ DRAW PAGE ══ -->
+<div id="page-draw" class="page active" style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+
   <div class="toolbar">
 
-    <div class="tool-group">
-      <label>Ferramenta</label>
-      <button class="tool-btn active" id="tool-pencil" title="Lápis" onclick="setTool('pencil')">✏️</button>
-      <button class="tool-btn" id="tool-brush"  title="Pincel"  onclick="setTool('brush')">🖌️</button>
-      <button class="tool-btn" id="tool-eraser" title="Borracha" onclick="setTool('eraser')">🩹</button>
+    <div class="tg">
+      <span class="tg-label">Ferramenta</span>
+      <div class="tg-row">
+        <button class="tool-btn active" id="tbtn-pencil" title="Lápis" onclick="setTool('pencil',this)">✏️</button>
+        <button class="tool-btn" id="tbtn-brush" title="Pincel" onclick="setTool('brush',this)">🖌️</button>
+        <button class="tool-btn" id="tbtn-eraser" title="Borracha" onclick="setTool('eraser',this)">🩹</button>
+      </div>
     </div>
 
-    <div class="tool-group">
-      <label>Tamanho</label>
-      <input type="range" id="size-slider" min="1" max="50" value="6" oninput="updateSize(this.value)"/>
-      <div class="size-preview"><div class="size-dot" id="size-dot" style="width:6px;height:6px"></div></div>
+    <div class="tg">
+      <span class="tg-label">Tamanho</span>
+      <div class="tg-row">
+        <input type="range" id="size-range" min="2" max="60" value="8" oninput="setSize(this.value)"/>
+        <div id="size-preview"><div id="size-dot" style="width:8px;height:8px;"></div></div>
+      </div>
     </div>
 
-    <div class="tool-group">
-      <label>Cores</label>
-      <div id="swatches"></div>
+    <div class="tg">
+      <span class="tg-label">Opacidade</span>
+      <input type="range" id="opacity-range" min="10" max="100" value="100" oninput="setOpacity(this.value)"/>
     </div>
 
-    <div class="tool-group">
-      <label>Custom</label>
-      <input type="color" id="custom-color" value="#000000" oninput="pickCustomColor(this.value)" title="Cor personalizada"/>
+    <div class="tg">
+      <span class="tg-label">Cores</span>
+      <div class="color-grid" id="color-grid"></div>
     </div>
 
-    <div class="tool-group">
-      <label>Opacidade</label>
-      <input type="range" id="opacity-slider" min="10" max="100" value="100" oninput="updateOpacity(this.value)"/>
+    <div class="tg">
+      <span class="tg-label">Custom</span>
+      <input type="color" id="custom-color" value="#000000" title="Escolha uma cor" oninput="setCustomColor(this.value)"/>
     </div>
 
   </div>
 
   <div id="canvas-wrap">
-    <canvas id="main-canvas" width="640" height="480"></canvas>
+    <canvas id="main-canvas"></canvas>
   </div>
 
-  <div class="canvas-actions">
-    <button class="action-btn btn-undo"  onclick="undo()">↩️ Desfazer</button>
-    <button class="action-btn btn-fill"  onclick="fillCanvas()">🪣 Preencher</button>
-    <button class="action-btn btn-clear" onclick="clearCanvas()">🗑️ Limpar</button>
-    <button class="action-btn btn-save"  onclick="saveDrawing()">💾 Salvar</button>
+  <div class="actions">
+    <button class="act-btn btn-undo" onclick="undo()">↩️ Desfazer</button>
+    <button class="act-btn btn-fill" onclick="fillBg()">🪣 Preencher</button>
+    <button class="act-btn btn-clear" onclick="clearAll()">🗑️ Limpar</button>
+    <button class="act-btn btn-save" onclick="saveImg()">💾 Salvar</button>
   </div>
 </div>
 
-<!-- ══════════ TUTORIALS PAGE ══════════ -->
-<div id="page-tutorials">
+<!-- ══ TUTORIALS PAGE ══ -->
+<div id="page-tutorials" class="page">
   <div class="tut-grid" id="tut-grid"></div>
 </div>
 
-<!-- ══════════ GALLERY PAGE ══════════ -->
-<div id="page-gallery">
+<!-- ══ GALLERY PAGE ══ -->
+<div id="page-gallery" class="page">
   <h2>🌟 Meus Desenhos</h2>
-  <div id="gallery-grid"></div>
+  <div class="gallery-grid" id="gallery-grid"></div>
 </div>
 
-<!-- ══════════ TUTORIAL MODAL ══════════ -->
-<div id="tut-modal">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeTutModal()">✕</button>
-    <h2 id="tut-modal-title"></h2>
-    <div class="step-indicator" id="step-dots"></div>
-    <div class="step-canvas-wrap">
-      <canvas id="tut-canvas" width="420" height="280"></canvas>
-    </div>
+<!-- ══ TUTORIAL MODAL ══ -->
+<div id="tut-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 id="modal-title">Tutorial</h2>
+    <div class="step-dots" id="step-dots"></div>
+    <canvas id="tut-canvas" width="440" height="280"></canvas>
     <div class="step-desc" id="step-desc"></div>
     <div class="step-nav">
-      <button class="btn-prev" onclick="prevStep()">◀ Anterior</button>
-      <button class="btn-next" onclick="nextStep()">Próximo ▶</button>
+      <button class="btn-prev" onclick="prevStep()">◀ Voltar</button>
+      <button class="btn-next" id="btn-next" onclick="nextStep()">Próximo ▶</button>
     </div>
-    <button class="btn-draw-it" onclick="drawItMyself()">🎨 Eu vou desenhar!</button>
+    <button class="btn-draw-it" onclick="drawMyself()">🎨 Quero desenhar!</button>
   </div>
 </div>
 
-<!-- ══════════ CONGRATS ══════════ -->
-<div id="congrats">
+<!-- ══ CONGRATS ══ -->
+<div id="congrats-overlay">
   <div class="congrats-box">
-    <div class="emoji">🥳</div>
+    <div class="big">🥳</div>
     <h2>Incrível!</h2>
-    <p>Você terminou o tutorial! Agora é sua vez de desenhar!</p>
-    <button class="congrats-close" onclick="closeCongratsAndDraw()">Vamos desenhar! 🎨</button>
+    <p>Você terminou o tutorial! Agora é sua vez!</p>
+    <button class="congrats-close" onclick="closeCongrats()">Vamos desenhar! 🎨</button>
   </div>
 </div>
 
 <script>
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  STATE
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ════════════════════════════════════
+//  TABS
+// ════════════════════════════════════
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
+  const el = document.getElementById('page-' + id);
+  el.style.display = (id === 'draw') ? 'flex' : 'block';
+  el.classList.add('active');
+
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  if (id === 'gallery') renderGallery();
+}
+
+// ════════════════════════════════════
+//  CANVAS SETUP
+// ════════════════════════════════════
 const canvas = document.getElementById('main-canvas');
 const ctx    = canvas.getContext('2d');
 
+function setupCanvas() {
+  const wrap = document.getElementById('canvas-wrap');
+  const maxW = Math.min(window.innerWidth - 32, 700);
+  const h    = Math.round(maxW * (480 / 700));
+  canvas.width  = maxW;
+  canvas.height = h;
+  canvas.style.width  = maxW + 'px';
+  canvas.style.height = h + 'px';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+setupCanvas();
+window.addEventListener('resize', () => {
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  setupCanvas();
+  ctx.putImageData(data, 0, 0);
+});
+
+// ════════════════════════════════════
+//  DRAWING STATE
+// ════════════════════════════════════
 let tool    = 'pencil';
 let color   = '#000000';
-let size    = 6;
-let opacity = 1;
+let brushSz = 8;
+let opacity = 1.0;
 let drawing = false;
 let lastX   = 0;
 let lastY   = 0;
 let undoStack = [];
 
-// ━━━━ COLOR PALETTE ━━━━
-const palette = [
-  '#000000','#ffffff','#ef4444','#f97316','#eab308',
-  '#22c55e','#3b82f6','#a855f7','#ec4899','#6b7280',
-  '#854d0e','#0ea5e9','#f0fdf4','#fef9c3','#fce7f3'
-];
-
-const swatchCont = document.getElementById('swatches');
-swatchCont.style.display='flex'; swatchCont.style.flexWrap='wrap'; swatchCont.style.gap='4px'; swatchCont.style.maxWidth='220px';
-
-palette.forEach(c => {
-  const d = document.createElement('div');
-  d.className = 'color-swatch';
-  d.style.background = c;
-  if(c === '#ffffff') d.style.border = '3px solid #e2e8f0';
-  d.onclick = () => selectColor(c, d);
-  swatchCont.appendChild(d);
-});
-
-function selectColor(c, el) {
-  color = c;
-  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-  if(el) el.classList.add('active');
-}
-
-// pick first swatch active
-swatchCont.firstChild.classList.add('active');
-
-function pickCustomColor(c) {
-  color = c;
-  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-}
-
-// ━━━━ TOOL ━━━━
-function setTool(t) {
-  tool = t;
-  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tool-' + t).classList.add('active');
-}
-
-function updateSize(v) {
-  size = parseInt(v);
-  const d = document.getElementById('size-dot');
-  const px = Math.min(v, 28);
-  d.style.width = px + 'px';
-  d.style.height = px + 'px';
-}
-
-function updateOpacity(v) { opacity = v / 100; }
-
-// ━━━━ CANVAS RESIZE ━━━━
-function resizeCanvas() {
-  const wrap = document.getElementById('canvas-wrap');
-  const maxW = Math.min(window.innerWidth - 40, 680);
-  const ratio = 480 / 640;
-  canvas.style.width  = maxW + 'px';
-  canvas.style.height = (maxW * ratio) + 'px';
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-// ━━━━ DRAWING ━━━━
-function getPos(e) {
-  const r = canvas.getBoundingClientRect();
-  const scaleX = canvas.width  / r.width;
-  const scaleY = canvas.height / r.height;
-  if (e.touches) {
-    return [(e.touches[0].clientX - r.left) * scaleX,
-            (e.touches[0].clientY - r.top)  * scaleY];
-  }
-  return [(e.clientX - r.left) * scaleX,
-          (e.clientY - r.top)  * scaleY];
+function getXY(e) {
+  const r  = canvas.getBoundingClientRect();
+  const sx = canvas.width  / r.width;
+  const sy = canvas.height / r.height;
+  const src = e.touches ? e.touches[0] : e;
+  return [(src.clientX - r.left) * sx, (src.clientY - r.top) * sy];
 }
 
 function startDraw(e) {
   e.preventDefault();
-  saveUndo();
+  pushUndo();
   drawing = true;
-  [lastX, lastY] = getPos(e);
-
-  // single dot
-  ctx.beginPath();
-  ctx.globalAlpha = tool === 'eraser' ? 1 : opacity;
-  ctx.fillStyle   = tool === 'eraser' ? '#ffffff' : color;
-  ctx.arc(lastX, lastY, (tool === 'brush' ? size * 1.6 : size) / 2, 0, Math.PI * 2);
-  ctx.fill();
+  [lastX, lastY] = getXY(e);
+  // draw a dot on click
+  applyStroke(lastX, lastY, lastX, lastY);
 }
 
-function draw(e) {
+function moveDraw(e) {
   if (!drawing) return;
   e.preventDefault();
-  const [x, y] = getPos(e);
-
-  ctx.globalAlpha  = tool === 'eraser' ? 1 : opacity;
-  ctx.strokeStyle  = tool === 'eraser' ? '#ffffff' : color;
-  ctx.lineWidth    = tool === 'brush'  ? size * 1.6 : size;
-  ctx.lineCap      = 'round';
-  ctx.lineJoin     = 'round';
-
-  if (tool === 'pencil') {
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.shadowBlur = 0;
-  } else if (tool === 'brush') {
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.shadowColor = color;
-    ctx.shadowBlur  = size * 0.8;
-  } else {
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.shadowBlur  = 0;
-  }
-
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(x, y);
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.globalCompositeOperation = 'source-over';
-
+  const [x, y] = getXY(e);
+  applyStroke(lastX, lastY, x, y);
   [lastX, lastY] = [x, y];
 }
 
-function stopDraw() { drawing = false; }
+function stopDraw(e) {
+  drawing = false;
+}
 
+function applyStroke(x1, y1, x2, y2) {
+  ctx.save();
+  ctx.globalAlpha = (tool === 'eraser') ? 1 : opacity;
+  ctx.strokeStyle = (tool === 'eraser') ? '#ffffff' : color;
+  ctx.fillStyle   = (tool === 'eraser') ? '#ffffff' : color;
+  ctx.lineWidth   = (tool === 'brush')  ? brushSz * 1.8 : brushSz;
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+
+  if (tool === 'brush') {
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = brushSz * 0.7;
+  }
+
+  // dot
+  if (x1 === x2 && y1 === y2) {
+    ctx.beginPath();
+    ctx.arc(x1, y1, ctx.lineWidth / 2, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// mouse
 canvas.addEventListener('mousedown',  startDraw);
-canvas.addEventListener('mousemove',  draw);
+canvas.addEventListener('mousemove',  moveDraw);
 canvas.addEventListener('mouseup',    stopDraw);
 canvas.addEventListener('mouseleave', stopDraw);
-canvas.addEventListener('touchstart', startDraw, { passive: false });
-canvas.addEventListener('touchmove',  draw,      { passive: false });
+
+// touch
+canvas.addEventListener('touchstart', startDraw, {passive:false});
+canvas.addEventListener('touchmove',  moveDraw,  {passive:false});
 canvas.addEventListener('touchend',   stopDraw);
 
-// ━━━━ UNDO ━━━━
-function saveUndo() {
-  if (undoStack.length > 30) undoStack.shift();
+// ════════════════════════════════════
+//  UNDO
+// ════════════════════════════════════
+function pushUndo() {
+  if (undoStack.length >= 30) undoStack.shift();
   undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
 }
 
 function undo() {
-  if (undoStack.length === 0) return;
+  if (!undoStack.length) return;
   ctx.putImageData(undoStack.pop(), 0, 0);
 }
 
-// ━━━━ FILL ━━━━
-function fillCanvas() {
-  saveUndo();
+// ════════════════════════════════════
+//  ACTIONS
+// ════════════════════════════════════
+function fillBg() {
+  pushUndo();
+  ctx.save();
   ctx.globalAlpha = opacity;
   ctx.fillStyle   = color;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
-// ━━━━ CLEAR ━━━━
-function clearCanvas() {
+function clearAll() {
   if (!confirm('Apagar tudo? 🗑️')) return;
-  saveUndo();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  pushUndo();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-// ━━━━ SAVE ━━━━
-function saveDrawing() {
-  const dataURL = canvas.toDataURL('image/png');
-  const saved = JSON.parse(localStorage.getItem('kidDrawings') || '[]');
-  saved.push({ url: dataURL, date: new Date().toLocaleDateString('pt-BR') });
+function saveImg() {
+  const url    = canvas.toDataURL('image/png');
+  const saved  = JSON.parse(localStorage.getItem('kidDrawings') || '[]');
+  const date   = new Date().toLocaleDateString('pt-BR');
+  saved.push({url, date});
   localStorage.setItem('kidDrawings', JSON.stringify(saved));
 
-  // also download
   const a = document.createElement('a');
   a.download = 'meu-desenho.png';
-  a.href     = dataURL;
+  a.href     = url;
   a.click();
+  alert('🎉 Salvo na Galeria e baixado!');
+}
 
-  alert('🎉 Desenho salvo na Galeria e baixado!');
+// ════════════════════════════════════
+//  TOOLS / COLOR / SIZE
+// ════════════════════════════════════
+function setTool(t, btn) {
+  tool = t;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function setSize(v) {
+  brushSz = parseInt(v);
+  const px = Math.min(parseInt(v), 30);
+  const dot = document.getElementById('size-dot');
+  dot.style.width  = px + 'px';
+  dot.style.height = px + 'px';
+}
+
+function setOpacity(v) { opacity = parseInt(v) / 100; }
+
+function setColor(c) {
+  color = c;
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('picked'));
+}
+
+function setCustomColor(c) {
+  color = c;
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('picked'));
+}
+
+// ════════════════════════════════════
+//  COLOR PALETTE
+// ════════════════════════════════════
+const COLORS = [
+  '#000000','#ffffff','#ef4444','#f97316','#eab308',
+  '#22c55e','#3b82f6','#a855f7','#ec4899','#6b7280',
+  '#92400e','#0ea5e9','#fde68a','#bbf7d0','#fce7f3',
+  '#7c3aed','#059669','#dc2626','#1d4ed8','#be185d'
+];
+
+const grid = document.getElementById('color-grid');
+COLORS.forEach(c => {
+  const s = document.createElement('div');
+  s.className = 'swatch';
+  s.style.background = c;
+  if (c === '#ffffff') s.style.boxShadow = 'inset 0 0 0 1px #cbd5e1';
+  s.onclick = () => {
+    color = c;
+    document.querySelectorAll('.swatch').forEach(x => x.classList.remove('picked'));
+    s.classList.add('picked');
+  };
+  grid.appendChild(s);
+});
+// mark first as picked
+grid.firstChild.classList.add('picked');
+
+// ════════════════════════════════════
+//  GALLERY
+// ════════════════════════════════════
+function renderGallery() {
+  const gg   = document.getElementById('gallery-grid');
+  const list = JSON.parse(localStorage.getItem('kidDrawings') || '[]');
+  gg.innerHTML = '';
+  if (!list.length) {
+    gg.innerHTML = '<p class="empty-msg">Nenhum desenho ainda! Desenhe e salve 🎨</p>';
+    return;
+  }
+  list.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'gitem';
+    div.innerHTML = `
+      <img src="${item.url}" alt="Desenho ${i+1}"/>
+      <div class="gitem-footer">
+        <span>${item.date}</span>
+        <button class="del-btn" onclick="deleteDrawing(${i})" title="Apagar">🗑️</button>
+      </div>`;
+    gg.appendChild(div);
+  });
+}
+
+function deleteDrawing(i) {
+  const list = JSON.parse(localStorage.getItem('kidDrawings') || '[]');
+  list.splice(i, 1);
+  localStorage.setItem('kidDrawings', JSON.stringify(list));
   renderGallery();
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ════════════════════════════════════
 //  TUTORIALS DATA
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const tutorials = [
+// ════════════════════════════════════
+const TUTORIALS = [
   {
-    id: 'sun',
     title: '☀️ Sol Feliz',
     emoji: '☀️',
-    bg: 'linear-gradient(135deg,#fef9c3,#fde68a)',
-    difficulty: '⭐',
+    bg:   'linear-gradient(135deg,#fef9c3,#fde68a)',
+    diff: '⭐ Fácil',
     steps: [
-      {
-        desc: 'Vamos começar! Desenhe um círculo grande no meio do papel. Esse é o rosto do sol! 😊',
-        draw(c) {
-          c.clearRect(0,0,c.canvas.width,c.canvas.height);
-          c.strokeStyle='#f59e0b'; c.lineWidth=4;
-          c.beginPath(); c.arc(210,140,70,0,Math.PI*2); c.stroke();
+      { desc: 'Vamos começar! Desenhe um círculo grande no meio do papel. Esse é o rosto do sol! 😊',
+        draw(c,W,H){
+          c.clearRect(0,0,W,H);
+          c.strokeStyle='#f59e0b';c.lineWidth=4;
+          c.beginPath();c.arc(W/2,H/2,70,0,Math.PI*2);c.stroke();
         }
       },
-      {
-        desc: 'Agora vamos desenhar os raios ao redor do círculo. São linhas retas saindo para fora! ✨',
-        draw(c) {
-          c.strokeStyle='#f59e0b'; c.lineWidth=4;
+      { desc: 'Agora vamos desenhar os raios ao redor. São linhas saindo para fora do círculo! ✨',
+        draw(c,W,H){
+          c.strokeStyle='#f59e0b';c.lineWidth=4;
           for(let i=0;i<12;i++){
             const a=i*(Math.PI*2/12);
-            const x1=210+80*Math.cos(a), y1=140+80*Math.sin(a);
-            const x2=210+110*Math.cos(a),y2=140+110*Math.sin(a);
-            c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke();
+            c.beginPath();
+            c.moveTo(W/2+80*Math.cos(a),H/2+80*Math.sin(a));
+            c.lineTo(W/2+110*Math.cos(a),H/2+110*Math.sin(a));
+            c.stroke();
           }
         }
       },
-      {
-        desc: 'Agora desenhe dois olhinhos e um sorriso grande no sol. Ele está feliz! 😄',
-        draw(c) {
-          c.fillStyle='#f59e0b';
-          // olhos
-          c.beginPath(); c.arc(192,128,7,0,Math.PI*2); c.fill();
-          c.beginPath(); c.arc(228,128,7,0,Math.PI*2); c.fill();
-          // boca
-          c.strokeStyle='#f59e0b'; c.lineWidth=4;
-          c.beginPath(); c.arc(210,148,22,0.2,Math.PI-0.2); c.stroke();
+      { desc: 'Desenhe dois olhinhos e um sorriso grande! O sol está muito feliz! 😄',
+        draw(c,W,H){
+          const cx=W/2,cy=H/2;
+          c.fillStyle='#92400e';
+          c.beginPath();c.arc(cx-20,cy-14,7,0,Math.PI*2);c.fill();
+          c.beginPath();c.arc(cx+20,cy-14,7,0,Math.PI*2);c.fill();
+          c.strokeStyle='#92400e';c.lineWidth=4;
+          c.beginPath();c.arc(cx,cy+8,22,0.2,Math.PI-0.2);c.stroke();
         }
       },
-      {
-        desc: 'Por último, pinte o sol de amarelo e laranja. Que sol lindo! 🌈',
-        draw(c) {
-          const grad = c.createRadialGradient(210,140,20,210,140,70);
-          grad.addColorStop(0,'#fef08a');
-          grad.addColorStop(1,'#f59e0b');
-          c.fillStyle=grad;
-          c.beginPath(); c.arc(210,140,70,0,Math.PI*2); c.fill();
-          // redraw features on top
+      { desc: 'Pinte o sol de amarelo e laranja. Ficou lindo! 🌈',
+        draw(c,W,H){
+          const cx=W/2,cy=H/2;
+          const g=c.createRadialGradient(cx,cy,10,cx,cy,70);
+          g.addColorStop(0,'#fef08a');g.addColorStop(1,'#f59e0b');
+          c.fillStyle=g;
+          c.beginPath();c.arc(cx,cy,70,0,Math.PI*2);c.fill();
+          c.strokeStyle='#d97706';c.lineWidth=3;
+          c.beginPath();c.arc(cx,cy,70,0,Math.PI*2);c.stroke();
+          for(let i=0;i<12;i++){
+            const a=i*(Math.PI*2/12);
+            c.beginPath();
+            c.moveTo(cx+80*Math.cos(a),cy+80*Math.sin(a));
+            c.lineTo(cx+110*Math.cos(a),cy+110*Math.sin(a));
+            c.stroke();
+          }
           c.fillStyle='#92400e';
-          c.beginPath(); c.arc(192,128,6,0,Math.PI*2); c.fill();
-          c.beginPath(); c.arc(228,128,6,0,Math.PI*2); c.fill();
-          c.strokeStyle='#92400e'; c.lineWidth=3;
-          c.beginPath(); c.arc(210,148,22,0.2,Math.PI-0.2); c.stroke();
+          c.beginPath();c.arc(cx-20,cy-14,7,0,Math.PI*2);c.fill();
+          c.beginPath();c.arc(cx+20,cy-14,7,0,Math.PI*2);c.fill();
+          c.strokeStyle='#92400e';c.lineWidth=4;
+          c.beginPath();c.arc(cx,cy+8,22,0.2,Math.PI-0.2);c.stroke();
         }
       }
     ]
   },
   {
-    id: 'cat',
     title: '🐱 Gatinho Fofo',
     emoji: '🐱',
-    bg: 'linear-gradient(135deg,#fce7f3,#fbcfe8)',
-    difficulty: '⭐⭐',
+    bg:   'linear-gradient(135deg,#fce7f3,#fbcfe8)',
+    diff: '⭐⭐ Médio',
     steps: [
-      {
-        desc: 'Desenhe um círculo grande para a cabeça do gatinho. 🐾',
-        draw(c) {
-          c.clearRect(0,0,c.canvas.width,c.canvas.height);
-          c.strokeStyle='#d97706'; c.lineWidth=4;
-          c.beginPath(); c.arc(210,155,80,0,Math.PI*2); c.stroke();
+      { desc: 'Vamos começar com um círculo grande para a cabeça do gatinho! 🐾',
+        draw(c,W,H){
+          c.clearRect(0,0,W,H);
+          c.strokeStyle='#d97706';c.lineWidth=4;
+          c.beginPath();c.arc(W/2,H/2+10,80,0,Math.PI*2);c.stroke();
         }
       },
-      {
-        desc: 'Agora adicione duas orelhinhas pontiagudas no topo da cabeça! Triângulos bem pequenos. 👂',
-        draw(c) {
-          c.strokeStyle='#d97706'; c.lineWidth=4;
-          // orelha esq
-          c.beginPath(); c.moveTo(152,95); c.lineTo(178,50); c.lineTo(204,88); c.stroke();
-          // orelha dir
-          c.beginPath(); c.moveTo(215,88); c.lineTo(242,50); c.lineTo(268,95); c.stroke();
+      { desc: 'Adicione duas orelhinhas pontudas em cima da cabeça — são triângulos! 👂',
+        draw(c,W,H){
+          const cx=W/2;
+          c.strokeStyle='#d97706';c.lineWidth=4;
+          c.beginPath();c.moveTo(cx-58,H/2-60);c.lineTo(cx-36,H/2-110);c.lineTo(cx-10,H/2-62);c.stroke();
+          c.beginPath();c.moveTo(cx+10,H/2-62);c.lineTo(cx+36,H/2-110);c.lineTo(cx+58,H/2-60);c.stroke();
         }
       },
-      {
-        desc: 'Desenhe os olhos grandes e amendoados, um narizinho de triângulo e bigodões! 😸',
-        draw(c) {
-          c.strokeStyle='#d97706'; c.lineWidth=3;
-          // olhos
-          c.beginPath(); c.ellipse(182,150,18,14,0,0,Math.PI*2); c.stroke();
-          c.beginPath(); c.ellipse(238,150,18,14,0,0,Math.PI*2); c.stroke();
-          // pupila
+      { desc: 'Agora os olhinhos grandes, narizinho triângulo e bigodões! 😸',
+        draw(c,W,H){
+          const cx=W/2,cy=H/2+10;
+          c.strokeStyle='#1e293b';c.lineWidth=3;
+          c.beginPath();c.ellipse(cx-26,cy-10,16,13,0,0,Math.PI*2);c.stroke();
+          c.beginPath();c.ellipse(cx+26,cy-10,16,13,0,0,Math.PI*2);c.stroke();
           c.fillStyle='#1e293b';
-          c.beginPath(); c.ellipse(182,150,8,11,0,0,Math.PI*2); c.fill();
-          c.beginPath(); c.ellipse(238,150,8,11,0,0,Math.PI*2); c.fill();
-          // nariz
+          c.beginPath();c.ellipse(cx-26,cy-10,7,10,0,0,Math.PI*2);c.fill();
+          c.beginPath();c.ellipse(cx+26,cy-10,7,10,0,0,Math.PI*2);c.fill();
           c.fillStyle='#ec4899';
-          c.beginPath(); c.moveTo(210,172); c.lineTo(202,182); c.lineTo(218,182); c.fill();
-          // bigode
-          c.strokeStyle='#94a3b8'; c.lineWidth=2;
-          c.beginPath(); c.moveTo(200,183); c.lineTo(150,175); c.stroke();
-          c.beginPath(); c.moveTo(200,188); c.lineTo(150,192); c.stroke();
-          c.beginPath(); c.moveTo(220,183); c.lineTo(270,175); c.stroke();
-          c.beginPath(); c.moveTo(220,188); c.lineTo(270,192); c.stroke();
+          c.beginPath();c.moveTo(cx,cy+16);c.lineTo(cx-8,cy+25);c.lineTo(cx+8,cy+25);c.fill();
+          c.strokeStyle='#94a3b8';c.lineWidth=2;
+          [[cx-10,cy+20,cx-60,cy+14],[cx-10,cy+25,cx-60,cy+29],
+           [cx+10,cy+20,cx+60,cy+14],[cx+10,cy+25,cx+60,cy+29]].forEach(([x1,y1,x2,y2])=>{
+            c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+          });
         }
       },
-      {
-        desc: 'Pinte seu gatinho! Use laranja, amarelo ou qualquer cor que você quiser. 🎨',
-        draw(c) {
-          // Fill head
+      { desc: 'Pinte o gatinho de amarelo clarinho, com olhos verdes e nariz rosa! 🎨',
+        draw(c,W,H){
+          const cx=W/2,cy=H/2+10;
           c.fillStyle='#fde68a';
-          c.beginPath(); c.arc(210,155,79,0,Math.PI*2); c.fill();
-          // orelha rosa interna
+          c.beginPath();c.arc(cx,cy,80,0,Math.PI*2);c.fill();
           c.fillStyle='#fbcfe8';
-          c.beginPath(); c.moveTo(160,90); c.lineTo(180,58); c.lineTo(200,86); c.fill();
-          c.beginPath(); c.moveTo(219,86); c.lineTo(240,58); c.lineTo(260,90); c.fill();
-          // outline
-          c.strokeStyle='#d97706'; c.lineWidth=3;
-          c.beginPath(); c.arc(210,155,79,0,Math.PI*2); c.stroke();
-          c.beginPath(); c.moveTo(152,95); c.lineTo(178,50); c.lineTo(204,88); c.stroke();
-          c.beginPath(); c.moveTo(215,88); c.lineTo(242,50); c.lineTo(268,95); c.stroke();
-          // eyes
-          c.fillStyle='#1e293b';
-          c.beginPath(); c.ellipse(182,150,8,11,0,0,Math.PI*2); c.fill();
-          c.beginPath(); c.ellipse(238,150,8,11,0,0,Math.PI*2); c.fill();
+          c.beginPath();c.moveTo(cx-54,H/2-62);c.lineTo(cx-36,H/2-105);c.lineTo(cx-14,H/2-64);c.fill();
+          c.beginPath();c.moveTo(cx+14,H/2-64);c.lineTo(cx+36,H/2-105);c.lineTo(cx+54,H/2-62);c.fill();
+          c.strokeStyle='#d97706';c.lineWidth=3;
+          c.beginPath();c.arc(cx,cy,80,0,Math.PI*2);c.stroke();
+          c.beginPath();c.moveTo(cx-58,H/2-60);c.lineTo(cx-36,H/2-110);c.lineTo(cx-10,H/2-62);c.stroke();
+          c.beginPath();c.moveTo(cx+10,H/2-62);c.lineTo(cx+36,H/2-110);c.lineTo(cx+58,H/2-60);c.stroke();
+          c.fillStyle='#166534';
+          c.beginPath();c.ellipse(cx-26,cy-10,7,10,0,0,Math.PI*2);c.fill();
+          c.beginPath();c.ellipse(cx+26,cy-10,7,10,0,0,Math.PI*2);c.fill();
           c.fillStyle='white';
-          c.beginPath(); c.arc(185,146,3,0,Math.PI*2); c.fill();
-          c.beginPath(); c.arc(241,146,3,0,Math.PI*2); c.fill();
+          c.beginPath();c.arc(cx-23,cy-13,3,0,Math.PI*2);c.fill();
+          c.beginPath();c.arc(cx+29,cy-13,3,0,Math.PI*2);c.fill();
+          c.strokeStyle='#1e293b';c.lineWidth=2;
+          c.beginPath();c.ellipse(cx-26,cy-10,16,13,0,0,Math.PI*2);c.stroke();
+          c.beginPath();c.ellipse(cx+26,cy-10,16,13,0,0,Math.PI*2);c.stroke();
           c.fillStyle='#ec4899';
-          c.beginPath(); c.moveTo(210,172); c.lineTo(202,182); c.lineTo(218,182); c.fill();
-          c.strokeStyle='#94a3b8'; c.lineWidth=2;
-          c.beginPath(); c.moveTo(200,183); c.lineTo(150,175); c.stroke();
-          c.beginPath(); c.moveTo(200,188); c.lineTo(150,192); c.stroke();
-          c.beginPath(); c.moveTo(220,183); c.lineTo(270,175); c.stroke();
-          c.beginPath(); c.moveTo(220,188); c.lineTo(270,192); c.stroke();
-          c.strokeStyle='#d97706'; c.lineWidth=2;
-          c.beginPath(); c.ellipse(182,150,18,14,0,0,Math.PI*2); c.stroke();
-          c.beginPath(); c.ellipse(238,150,18,14,0,0,Math.PI*2); c.stroke();
+          c.beginPath();c.moveTo(cx,cy+16);c.lineTo(cx-8,cy+25);c.lineTo(cx+8,cy+25);c.fill();
+          c.strokeStyle='#94a3b8';c.lineWidth=2;
+          [[cx-10,cy+20,cx-60,cy+14],[cx-10,cy+25,cx-60,cy+29],
+           [cx+10,cy+20,cx+60,cy+14],[cx+10,cy+25,cx+60,cy+29]].forEach(([x1,y1,x2,y2])=>{
+            c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+          });
         }
       }
     ]
   },
   {
-    id: 'house',
     title: '🏠 Casinha',
     emoji: '🏠',
-    bg: 'linear-gradient(135deg,#dcfce7,#bbf7d0)',
-    difficulty: '⭐',
+    bg:   'linear-gradient(135deg,#dcfce7,#bbf7d0)',
+    diff: '⭐ Fácil',
     steps: [
-      {
-        desc: 'Comece desenhando um quadrado grande. Essa é a parede da casa! 🧱',
-        draw(c) {
-          c.clearRect(0,0,c.canvas.width,c.canvas.height);
-          c.strokeStyle='#92400e'; c.lineWidth=4;
-          c.strokeRect(100,140,220,150);
+      { desc: 'Comece com um quadrado grande para as paredes da casa! 🧱',
+        draw(c,W,H){
+          c.clearRect(0,0,W,H);
+          c.strokeStyle='#92400e';c.lineWidth=4;
+          c.strokeRect(W/2-110,H/2-30,220,155);
         }
       },
-      {
-        desc: 'Agora adicione um telhado em cima: é um triângulo! 🔺',
-        draw(c) {
-          c.strokeStyle='#b91c1c'; c.lineWidth=4;
-          c.beginPath(); c.moveTo(80,140); c.lineTo(210,50); c.lineTo(340,140); c.closePath(); c.stroke();
+      { desc: 'Adicione um telhado triangular em cima do quadrado! 🔺',
+        draw(c,W,H){
+          const cx=W/2;
+          c.strokeStyle='#b91c1c';c.lineWidth=4;
+          c.beginPath();c.moveTo(cx-130,H/2-30);c.lineTo(cx,H/2-130);c.lineTo(cx+130,H/2-30);c.stroke();
         }
       },
-      {
-        desc: 'Desenhe uma porta no meio e duas janelas nos lados. 🚪🪟',
-        draw(c) {
-          c.strokeStyle='#92400e'; c.lineWidth=3;
-          // porta
-          c.strokeRect(185,220,50,70);
-          // janelas
-          c.strokeRect(115,165,55,45);
-          c.strokeRect(250,165,55,45);
-          // cruz nas janelas
-          c.beginPath(); c.moveTo(142,165); c.lineTo(142,210); c.stroke();
-          c.beginPath(); c.moveTo(115,187); c.lineTo(170,187); c.stroke();
-          c.beginPath(); c.moveTo(277,165); c.lineTo(277,210); c.stroke();
-          c.beginPath(); c.moveTo(250,187); c.lineTo(305,187); c.stroke();
+      { desc: 'Coloque uma porta e duas janelas! 🚪🪟',
+        draw(c,W,H){
+          const cx=W/2,cy=H/2;
+          c.strokeStyle='#92400e';c.lineWidth=3;
+          c.strokeRect(cx-26,cy+42,52,73);
+          c.strokeRect(cx-100,cy-8,54,44);
+          c.strokeRect(cx+46,cy-8,54,44);
+          c.beginPath();c.moveTo(cx-73,cy-8);c.lineTo(cx-73,cy+36);c.stroke();
+          c.beginPath();c.moveTo(cx-100,cy+14);c.lineTo(cx-46,cy+14);c.stroke();
+          c.beginPath();c.moveTo(cx+73,cy-8);c.lineTo(cx+73,cy+36);c.stroke();
+          c.beginPath();c.moveTo(cx+46,cy+14);c.lineTo(cx+100,cy+14);c.stroke();
         }
       },
-      {
-        desc: 'Pinte a casinha! Paredes amarelas, telhado vermelho e gramado verde. 🌿',
-        draw(c) {
-          // grass
-          c.fillStyle='#4ade80';
-          c.fillRect(60,285,320,30);
-          // walls
-          c.fillStyle='#fef9c3';
-          c.fillRect(101,141,219,149);
-          // roof
+      { desc: 'Pinte a casinha! Paredes amarelas, telhado vermelho, gramado verde! 🌿',
+        draw(c,W,H){
+          const cx=W/2,cy=H/2;
+          c.fillStyle='#4ade80';c.fillRect(0,cy+125,W,60);
+          c.fillStyle='#fef9c3';c.fillRect(cx-109,cy-29,218,154);
           c.fillStyle='#ef4444';
-          c.beginPath(); c.moveTo(80,140); c.lineTo(210,50); c.lineTo(340,140); c.fill();
-          // door
-          c.fillStyle='#92400e';
-          c.fillRect(186,221,48,68);
-          c.fillStyle='#fbbf24';
-          c.beginPath(); c.arc(225,257,5,0,Math.PI*2); c.fill();
-          // windows
+          c.beginPath();c.moveTo(cx-130,cy-30);c.lineTo(cx,cy-130);c.lineTo(cx+130,cy-30);c.fill();
+          c.strokeStyle='#b91c1c';c.lineWidth=3;
+          c.beginPath();c.moveTo(cx-130,cy-30);c.lineTo(cx,cy-130);c.lineTo(cx+130,cy-30);c.stroke();
+          c.fillStyle='#92400e';c.fillRect(cx-25,cy+43,50,72);
+          c.fillStyle='#fbbf24';c.beginPath();c.arc(cx+16,cy+82,4,0,Math.PI*2);c.fill();
           c.fillStyle='#bae6fd';
-          c.fillRect(116,166,53,43);
-          c.fillRect(251,166,53,43);
-          c.strokeStyle='#92400e'; c.lineWidth=3;
-          c.strokeRect(115,165,55,45);
-          c.strokeRect(250,165,55,45);
-          c.strokeRect(185,220,50,70);
-          c.beginPath(); c.moveTo(142,165); c.lineTo(142,210); c.stroke();
-          c.beginPath(); c.moveTo(115,187); c.lineTo(170,187); c.stroke();
-          c.beginPath(); c.moveTo(277,165); c.lineTo(277,210); c.stroke();
-          c.beginPath(); c.moveTo(250,187); c.lineTo(305,187); c.stroke();
-          c.strokeStyle='#92400e'; c.lineWidth=4;
-          c.strokeRect(100,140,220,150);
-          c.beginPath(); c.moveTo(80,140); c.lineTo(210,50); c.lineTo(340,140); c.closePath(); c.stroke();
+          c.fillRect(cx-99,cy-7,52,42);
+          c.fillRect(cx+47,cy-7,52,42);
+          c.strokeStyle='#92400e';c.lineWidth=3;
+          c.strokeRect(cx-100,cy-8,54,44);c.strokeRect(cx+46,cy-8,54,44);
+          c.strokeRect(cx-26,cy+42,52,73);
+          c.strokeRect(cx-110,cy-30,220,155);
+          c.beginPath();c.moveTo(cx-73,cy-8);c.lineTo(cx-73,cy+36);c.stroke();
+          c.beginPath();c.moveTo(cx-100,cy+14);c.lineTo(cx-46,cy+14);c.stroke();
+          c.beginPath();c.moveTo(cx+73,cy-8);c.lineTo(cx+73,cy+36);c.stroke();
+          c.beginPath();c.moveTo(cx+46,cy+14);c.lineTo(cx+100,cy+14);c.stroke();
         }
       }
     ]
   },
   {
-    id: 'fish',
-    title: '🐠 Peixinho',
-    emoji: '🐠',
-    bg: 'linear-gradient(135deg,#e0f2fe,#bae6fd)',
-    difficulty: '⭐',
-    steps: [
-      {
-        desc: 'Desenhe um oval deitado para o corpo do peixe. 🐟',
-        draw(c) {
-          c.clearRect(0,0,c.canvas.width,c.canvas.height);
-          c.strokeStyle='#0ea5e9'; c.lineWidth=4;
-          c.beginPath(); c.ellipse(200,145,110,65,0,0,Math.PI*2); c.stroke();
-        }
-      },
-      {
-        desc: 'Adicione uma cauda em forma de "V" na parte de trás! 🌊',
-        draw(c) {
-          c.strokeStyle='#0ea5e9'; c.lineWidth=4;
-          c.beginPath(); c.moveTo(310,145); c.lineTo(360,100); c.lineTo(360,190); c.closePath(); c.stroke();
-        }
-      },
-      {
-        desc: 'Coloque um olhão, barbatanas e listras no corpo! 🔵',
-        draw(c) {
-          // olho
-          c.strokeStyle='#0ea5e9'; c.lineWidth=3;
-          c.beginPath(); c.arc(120,130,18,0,Math.PI*2); c.stroke();
-          c.fillStyle='#0c4a6e';
-          c.beginPath(); c.arc(120,130,8,0,Math.PI*2); c.fill();
-          // barbatana cima
-          c.beginPath(); c.moveTo(180,80); c.quadraticCurveTo(200,40,230,80); c.stroke();
-          // listras
-          c.strokeStyle='#7dd3fc'; c.lineWidth=3;
-          for(let x=160;x<=280;x+=35){
-            c.beginPath();
-            c.moveTo(x,88); c.quadraticCurveTo(x+5,145,x,202);
-            c.stroke();
-          }
-        }
-      },
-      {
-        desc: 'Pinte o peixe com cores vivas! Laranja, azul, vermelho — você decide! 🎨',
-        draw(c) {
-          // body fill
-          const g = c.createLinearGradient(90,80,310,210);
-          g.addColorStop(0,'#fb923c');
-          g.addColorStop(1,'#ef4444');
-          c.fillStyle=g;
-          c.beginPath(); c.ellipse(200,145,110,65,0,0,Math.PI*2); c.fill();
-          // tail fill
-          c.fillStyle='#f97316';
-          c.beginPath(); c.moveTo(310,145); c.lineTo(360,100); c.lineTo(360,190); c.fill();
-          // listras
-          c.strokeStyle='rgba(255,255,255,0.5)'; c.lineWidth=4;
-          for(let x=160;x<=280;x+=35){
-            c.beginPath(); c.moveTo(x,88); c.quadraticCurveTo(x+5,145,x,202); c.stroke();
-          }
-          // eye
-          c.fillStyle='white';
-          c.beginPath(); c.arc(120,130,18,0,Math.PI*2); c.fill();
-          c.fillStyle='#0c4a6e';
-          c.beginPath(); c.arc(120,130,8,0,Math.PI*2); c.fill();
-          c.fillStyle='white';
-          c.beginPath(); c.arc(123,127,3,0,Math.PI*2); c.fill();
-          // fin
-          c.fillStyle='rgba(251,146,60,0.7)';
-          c.beginPath(); c.moveTo(180,80); c.quadraticCurveTo(200,40,230,80); c.fill();
-          c.strokeStyle='#ea580c'; c.lineWidth=3;
-          c.beginPath(); c.ellipse(200,145,110,65,0,0,Math.PI*2); c.stroke();
-          c.beginPath(); c.moveTo(310,145); c.lineTo(360,100); c.lineTo(360,190); c.closePath(); c.stroke();
-        }
-      }
-    ]
-  },
-  {
-    id: 'flower',
     title: '🌸 Florzinha',
     emoji: '🌸',
-    bg: 'linear-gradient(135deg,#fdf2f8,#fce7f3)',
-    difficulty: '⭐',
+    bg:   'linear-gradient(135deg,#fdf2f8,#fce7f3)',
+    diff: '⭐ Fácil',
     steps: [
-      {
-        desc: 'Desenhe um círculo pequeno no centro — esse é o coração da flor! 💛',
-        draw(c) {
-          c.clearRect(0,0,c.canvas.width,c.canvas.height);
-          c.strokeStyle='#f59e0b'; c.lineWidth=4;
-          c.beginPath(); c.arc(210,145,28,0,Math.PI*2); c.stroke();
+      { desc: 'Desenhe um círculo pequeno no centro — é o coração da flor! 💛',
+        draw(c,W,H){
+          c.clearRect(0,0,W,H);
+          c.strokeStyle='#f59e0b';c.lineWidth=4;
+          c.beginPath();c.arc(W/2,H/2,28,0,Math.PI*2);c.stroke();
         }
       },
-      {
-        desc: 'Desenhe pétalas ovais ao redor do centro, como raios de sol! 🌺',
-        draw(c) {
-          c.strokeStyle='#ec4899'; c.lineWidth=3;
+      { desc: 'Adicione pétalas ovais ao redor — como raios de sol! 🌺',
+        draw(c,W,H){
+          c.strokeStyle='#ec4899';c.lineWidth=3;
           for(let i=0;i<8;i++){
-            c.save();
-            c.translate(210,145);
-            c.rotate(i*(Math.PI/4));
-            c.beginPath(); c.ellipse(0,-58,16,30,0,0,Math.PI*2);
-            c.stroke();
+            c.save();c.translate(W/2,H/2);c.rotate(i*(Math.PI/4));
+            c.beginPath();c.ellipse(0,-56,15,28,0,0,Math.PI*2);c.stroke();
             c.restore();
           }
         }
       },
-      {
-        desc: 'Adicione um caule com folhinhas. Uma linha curva para baixo com dois ovais! 🌿',
-        draw(c) {
-          c.strokeStyle='#16a34a'; c.lineWidth=4;
-          c.beginPath(); c.moveTo(210,173); c.quadraticCurveTo(210,250,210,280); c.stroke();
-          // folhas
-          c.beginPath(); c.ellipse(190,230,20,12,-0.6,0,Math.PI*2); c.stroke();
-          c.beginPath(); c.ellipse(230,240,20,12,0.6,0,Math.PI*2); c.stroke();
+      { desc: 'Agora um caule com duas folhinhas verdes! 🌿',
+        draw(c,W,H){
+          const cx=W/2;
+          c.strokeStyle='#16a34a';c.lineWidth=4;
+          c.beginPath();c.moveTo(cx,H/2+28);c.quadraticCurveTo(cx,H/2+100,cx,H/2+140);c.stroke();
+          c.beginPath();c.ellipse(cx-22,H/2+80,20,11,-0.5,0,Math.PI*2);c.stroke();
+          c.beginPath();c.ellipse(cx+22,H/2+96,20,11,0.5,0,Math.PI*2);c.stroke();
         }
       },
-      {
-        desc: 'Agora pinte tudo! Pétalas rosas, centro amarelo e caule verde. 🌸',
-        draw(c) {
-          // petals
+      { desc: 'Pinte! Pétalas rosas, centro amarelo, caule e folhas verdes! 🎨',
+        draw(c,W,H){
+          const cx=W/2,cy=H/2;
           c.fillStyle='#f9a8d4';
           for(let i=0;i<8;i++){
-            c.save();
-            c.translate(210,145);
-            c.rotate(i*(Math.PI/4));
-            c.beginPath(); c.ellipse(0,-58,16,30,0,0,Math.PI*2);
-            c.fill();
+            c.save();c.translate(cx,cy);c.rotate(i*(Math.PI/4));
+            c.beginPath();c.ellipse(0,-56,15,28,0,0,Math.PI*2);c.fill();
             c.restore();
           }
-          c.strokeStyle='#ec4899'; c.lineWidth=2;
+          c.strokeStyle='#db2777';c.lineWidth=2;
           for(let i=0;i<8;i++){
-            c.save();
-            c.translate(210,145);
-            c.rotate(i*(Math.PI/4));
-            c.beginPath(); c.ellipse(0,-58,16,30,0,0,Math.PI*2);
-            c.stroke();
+            c.save();c.translate(cx,cy);c.rotate(i*(Math.PI/4));
+            c.beginPath();c.ellipse(0,-56,15,28,0,0,Math.PI*2);c.stroke();
             c.restore();
           }
-          // center
           c.fillStyle='#fef08a';
-          c.beginPath(); c.arc(210,145,28,0,Math.PI*2); c.fill();
-          c.strokeStyle='#f59e0b'; c.lineWidth=3;
-          c.beginPath(); c.arc(210,145,28,0,Math.PI*2); c.stroke();
-          // stem
-          c.strokeStyle='#16a34a'; c.lineWidth=4;
-          c.beginPath(); c.moveTo(210,173); c.quadraticCurveTo(210,250,210,280); c.stroke();
+          c.beginPath();c.arc(cx,cy,28,0,Math.PI*2);c.fill();
+          c.strokeStyle='#f59e0b';c.lineWidth=3;
+          c.beginPath();c.arc(cx,cy,28,0,Math.PI*2);c.stroke();
           c.fillStyle='#4ade80';
-          c.beginPath(); c.ellipse(190,230,20,12,-0.6,0,Math.PI*2); c.fill();
-          c.beginPath(); c.ellipse(230,240,20,12,0.6,0,Math.PI*2); c.fill();
-          c.strokeStyle='#16a34a'; c.lineWidth=2;
-          c.beginPath(); c.ellipse(190,230,20,12,-0.6,0,Math.PI*2); c.stroke();
-          c.beginPath(); c.ellipse(230,240,20,12,0.6,0,Math.PI*2); c.stroke();
-          c.strokeStyle='#16a34a'; c.lineWidth=4;
-          c.beginPath(); c.moveTo(210,173); c.quadraticCurveTo(205,252,210,280); c.stroke();
+          c.beginPath();c.ellipse(cx-22,cy+80,20,11,-0.5,0,Math.PI*2);c.fill();
+          c.beginPath();c.ellipse(cx+22,cy+96,20,11,0.5,0,Math.PI*2);c.fill();
+          c.strokeStyle='#16a34a';c.lineWidth=4;
+          c.beginPath();c.moveTo(cx,cy+28);c.quadraticCurveTo(cx,cy+100,cx,cy+140);c.stroke();
+          c.lineWidth=2;
+          c.beginPath();c.ellipse(cx-22,cy+80,20,11,-0.5,0,Math.PI*2);c.stroke();
+          c.beginPath();c.ellipse(cx+22,cy+96,20,11,0.5,0,Math.PI*2);c.stroke();
         }
       }
     ]
   },
   {
-    id: 'rocket',
+    title: '🐠 Peixinho',
+    emoji: '🐠',
+    bg:   'linear-gradient(135deg,#e0f2fe,#bae6fd)',
+    diff: '⭐ Fácil',
+    steps: [
+      { desc: 'Desenhe um oval deitado para o corpinho do peixe! 🐟',
+        draw(c,W,H){
+          c.clearRect(0,0,W,H);
+          c.strokeStyle='#0ea5e9';c.lineWidth=4;
+          c.beginPath();c.ellipse(W/2-20,H/2,105,60,0,0,Math.PI*2);c.stroke();
+        }
+      },
+      { desc: 'Agora adicione uma cauda em forma de V na parte de trás! 🌊',
+        draw(c,W,H){
+          const cx=W/2-20,cy=H/2;
+          c.strokeStyle='#0ea5e9';c.lineWidth=4;
+          c.beginPath();c.moveTo(cx+105,cy);c.lineTo(cx+150,cy-45);c.lineTo(cx+150,cy+45);c.closePath();c.stroke();
+        }
+      },
+      { desc: 'Adicione um olhão grande, barbatana e listrinhas no corpo! 🔵',
+        draw(c,W,H){
+          const cx=W/2-20,cy=H/2;
+          c.strokeStyle='#0ea5e9';c.lineWidth=3;
+          c.beginPath();c.arc(cx-65,cy-10,17,0,Math.PI*2);c.stroke();
+          c.fillStyle='#0c4a6e';
+          c.beginPath();c.arc(cx-65,cy-10,8,0,Math.PI*2);c.fill();
+          c.beginPath();c.moveTo(cx-20,cy-60);c.quadraticCurveTo(cx,cy-90,cx+20,cy-60);c.stroke();
+          c.strokeStyle='#7dd3fc';c.lineWidth=3;
+          for(let x=cx-30;x<=cx+60;x+=28){
+            c.beginPath();c.moveTo(x,cy-55);c.quadraticCurveTo(x+4,cy,x,cy+55);c.stroke();
+          }
+        }
+      },
+      { desc: 'Pinte com cores bonitas! Laranja, vermelho ou o que você quiser! 🎨',
+        draw(c,W,H){
+          const cx=W/2-20,cy=H/2;
+          const g=c.createLinearGradient(cx-105,cy-60,cx+105,cy+60);
+          g.addColorStop(0,'#fb923c');g.addColorStop(1,'#ef4444');
+          c.fillStyle=g;
+          c.beginPath();c.ellipse(cx,cy,105,60,0,0,Math.PI*2);c.fill();
+          c.fillStyle='#f97316';
+          c.beginPath();c.moveTo(cx+105,cy);c.lineTo(cx+150,cy-45);c.lineTo(cx+150,cy+45);c.fill();
+          c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=4;
+          for(let x=cx-30;x<=cx+60;x+=28){
+            c.beginPath();c.moveTo(x,cy-55);c.quadraticCurveTo(x+4,cy,x,cy+55);c.stroke();
+          }
+          c.fillStyle='white';
+          c.beginPath();c.arc(cx-65,cy-10,17,0,Math.PI*2);c.fill();
+          c.fillStyle='#0c4a6e';
+          c.beginPath();c.arc(cx-65,cy-10,8,0,Math.PI*2);c.fill();
+          c.fillStyle='white';
+          c.beginPath();c.arc(cx-62,cy-13,3,0,Math.PI*2);c.fill();
+          c.strokeStyle='#ea580c';c.lineWidth=3;
+          c.beginPath();c.ellipse(cx,cy,105,60,0,0,Math.PI*2);c.stroke();
+          c.beginPath();c.moveTo(cx+105,cy);c.lineTo(cx+150,cy-45);c.lineTo(cx+150,cy+45);c.closePath();c.stroke();
+        }
+      }
+    ]
+  },
+  {
     title: '🚀 Foguete',
     emoji: '🚀',
-    bg: 'linear-gradient(135deg,#1e1b4b,#312e81)',
-    difficulty: '⭐⭐',
+    bg:   'linear-gradient(135deg,#312e81,#1e1b4b)',
+    diff: '⭐⭐ Médio',
     steps: [
-      {
-        desc: 'Desenhe um retângulo estreito e alto — esse é o corpo do foguete! 🛸',
-        draw(c) {
-          c.clearRect(0,0,c.canvas.width,c.canvas.height);
-          c.strokeStyle='#818cf8'; c.lineWidth=4;
-          c.strokeRect(175,100,70,160);
+      { desc: 'Desenhe um retângulo estreito e alto — o corpo do foguete! 🛸',
+        draw(c,W,H){
+          c.clearRect(0,0,W,H);
+          c.fillStyle='#1a1a2e';c.fillRect(0,0,W,H);
+          c.strokeStyle='#818cf8';c.lineWidth=4;
+          c.strokeRect(W/2-36,H/2-60,72,140);
         }
       },
-      {
-        desc: 'Adicione uma ponta triangular no topo e duas asas nas laterais! ▲',
-        draw(c) {
-          c.strokeStyle='#818cf8'; c.lineWidth=4;
-          // ponta
-          c.beginPath(); c.moveTo(175,100); c.lineTo(210,40); c.lineTo(245,100); c.stroke();
-          // asa esq
-          c.beginPath(); c.moveTo(175,180); c.lineTo(140,240); c.lineTo(175,240); c.stroke();
-          // asa dir
-          c.beginPath(); c.moveTo(245,180); c.lineTo(280,240); c.lineTo(245,240); c.stroke();
+      { desc: 'Coloque uma ponta triangular no topo e asas nas laterais! ▲',
+        draw(c,W,H){
+          const cx=W/2;
+          c.strokeStyle='#818cf8';c.lineWidth=4;
+          c.beginPath();c.moveTo(cx-36,H/2-60);c.lineTo(cx,H/2-130);c.lineTo(cx+36,H/2-60);c.stroke();
+          c.beginPath();c.moveTo(cx-36,H/2+20);c.lineTo(cx-70,H/2+80);c.lineTo(cx-36,H/2+80);c.stroke();
+          c.beginPath();c.moveTo(cx+36,H/2+20);c.lineTo(cx+70,H/2+80);c.lineTo(cx+36,H/2+80);c.stroke();
         }
       },
-      {
-        desc: 'Coloque uma janela redonda no meio e chamas saindo da base! 🔥',
-        draw(c) {
-          c.strokeStyle='#818cf8'; c.lineWidth=3;
-          c.beginPath(); c.arc(210,165,22,0,Math.PI*2); c.stroke();
-          // chamas
-          c.strokeStyle='#f97316'; c.lineWidth=3;
-          c.beginPath(); c.moveTo(188,260); c.quadraticCurveTo(200,300,210,285); c.quadraticCurveTo(220,300,232,260); c.stroke();
-          c.beginPath(); c.moveTo(195,260); c.quadraticCurveTo(210,320,225,260); c.stroke();
+      { desc: 'Adicione uma janela redonda e chamas saindo da base! 🔥',
+        draw(c,W,H){
+          const cx=W/2;
+          c.strokeStyle='#818cf8';c.lineWidth=3;
+          c.beginPath();c.arc(cx,H/2+10,20,0,Math.PI*2);c.stroke();
+          c.strokeStyle='#f97316';c.lineWidth=3;
+          c.beginPath();c.moveTo(cx-20,H/2+80);c.quadraticCurveTo(cx,H/2+130,cx+20,H/2+80);c.stroke();
+          c.beginPath();c.moveTo(cx-12,H/2+80);c.quadraticCurveTo(cx,H/2+150,cx+12,H/2+80);c.stroke();
         }
       },
-      {
-        desc: 'Pinte o foguete! Vermelho e branco, janela azul, chamas laranja. 🌟',
-        draw(c) {
-          // body
-          c.fillStyle='#ef4444';
-          c.fillRect(176,101,68,159);
-          // tip
-          c.fillStyle='#f1f5f9';
-          c.beginPath(); c.moveTo(175,100); c.lineTo(210,40); c.lineTo(245,100); c.fill();
-          // wings
-          c.fillStyle='#ef4444';
-          c.beginPath(); c.moveTo(175,180); c.lineTo(140,240); c.lineTo(175,240); c.fill();
-          c.beginPath(); c.moveTo(245,180); c.lineTo(280,240); c.lineTo(245,240); c.fill();
-          // window
-          c.fillStyle='#bae6fd';
-          c.beginPath(); c.arc(210,165,22,0,Math.PI*2); c.fill();
-          c.strokeStyle='#0369a1'; c.lineWidth=3;
-          c.beginPath(); c.arc(210,165,22,0,Math.PI*2); c.stroke();
-          // flame
-          c.fillStyle='#fbbf24';
-          c.beginPath(); c.moveTo(195,260); c.quadraticCurveTo(210,320,225,260); c.fill();
-          c.fillStyle='#f97316';
-          c.beginPath(); c.moveTo(188,260); c.quadraticCurveTo(200,295,210,280); c.quadraticCurveTo(220,295,232,260); c.fill();
-          // outlines
-          c.strokeStyle='#475569'; c.lineWidth=3;
-          c.strokeRect(175,100,70,160);
-          c.beginPath(); c.moveTo(175,100); c.lineTo(210,40); c.lineTo(245,100); c.stroke();
-          c.beginPath(); c.moveTo(175,180); c.lineTo(140,240); c.lineTo(175,240); c.stroke();
-          c.beginPath(); c.moveTo(245,180); c.lineTo(280,240); c.lineTo(245,240); c.stroke();
-          // stars
+      { desc: 'Pinte o foguete! Vermelho e branco, janela azul, chamas laranja. 🌟',
+        draw(c,W,H){
+          const cx=W/2,cy=H/2;
+          c.fillStyle='#0f0f1a';c.fillRect(0,0,W,H);
           c.fillStyle='white';
-          [[60,60],[340,80],[50,200],[350,220],[80,300]].forEach(([x,y])=>{
-            c.beginPath(); c.arc(x,y,3,0,Math.PI*2); c.fill();
+          [[40,30],[380,50],[30,160],[390,180],[60,230],[360,240],[80,280]].forEach(([x,y])=>{
+            c.beginPath();c.arc(x,y,2,0,Math.PI*2);c.fill();
           });
+          c.fillStyle='#ef4444';c.fillRect(cx-35,cy-59,70,139);
+          c.fillStyle='#f1f5f9';
+          c.beginPath();c.moveTo(cx-36,cy-60);c.lineTo(cx,cy-130);c.lineTo(cx+36,cy-60);c.fill();
+          c.fillStyle='#ef4444';
+          c.beginPath();c.moveTo(cx-36,cy+20);c.lineTo(cx-70,cy+80);c.lineTo(cx-36,cy+80);c.fill();
+          c.beginPath();c.moveTo(cx+36,cy+20);c.lineTo(cx+70,cy+80);c.lineTo(cx+36,cy+80);c.fill();
+          c.fillStyle='#bae6fd';
+          c.beginPath();c.arc(cx,cy+10,20,0,Math.PI*2);c.fill();
+          c.strokeStyle='#0369a1';c.lineWidth=2;
+          c.beginPath();c.arc(cx,cy+10,20,0,Math.PI*2);c.stroke();
+          c.fillStyle='#fbbf24';
+          c.beginPath();c.moveTo(cx-18,cy+80);c.quadraticCurveTo(cx,cy+140,cx+18,cy+80);c.fill();
+          c.fillStyle='#f97316';
+          c.beginPath();c.moveTo(cx-10,cy+80);c.quadraticCurveTo(cx,cy+160,cx+10,cy+80);c.fill();
+          c.strokeStyle='#475569';c.lineWidth=3;
+          c.strokeRect(cx-36,cy-60,72,140);
+          c.beginPath();c.moveTo(cx-36,cy-60);c.lineTo(cx,cy-130);c.lineTo(cx+36,cy-60);c.stroke();
+          c.beginPath();c.moveTo(cx-36,cy+20);c.lineTo(cx-70,cy+80);c.lineTo(cx-36,cy+80);c.stroke();
+          c.beginPath();c.moveTo(cx+36,cy+20);c.lineTo(cx+70,cy+80);c.lineTo(cx+36,cy+80);c.stroke();
         }
       }
     ]
   }
 ];
 
-// ━━━━ RENDER TUTORIAL CARDS ━━━━
+// ════════════════════════════════════
+//  RENDER TUTORIAL CARDS
+// ════════════════════════════════════
 const tutGrid = document.getElementById('tut-grid');
-tutorials.forEach(t => {
+TUTORIALS.forEach(t => {
   const card = document.createElement('div');
   card.className = 'tut-card';
   card.innerHTML = `
     <div class="tut-thumb" style="background:${t.bg}">${t.emoji}</div>
     <div class="tut-info">
       <h3>${t.title}</h3>
-      <p class="tut-stars">${t.difficulty} dificuldade</p>
+      <p class="tut-diff">${t.diff}</p>
     </div>`;
   card.onclick = () => openTut(t);
   tutGrid.appendChild(card);
 });
 
-// ━━━━ TUTORIAL MODAL LOGIC ━━━━
-const tutModal  = document.getElementById('tut-modal');
-const tutCanvas = document.getElementById('tut-canvas');
-const tutCtx    = tutCanvas.getContext('2d');
+// ════════════════════════════════════
+//  TUTORIAL MODAL
+// ════════════════════════════════════
+const tutOverlay = document.getElementById('tut-overlay');
+const tutCanvas  = document.getElementById('tut-canvas');
+const tutCtx     = tutCanvas.getContext('2d');
+let curTut  = null;
+let curStep = 0;
 
-let currentTut  = null;
-let currentStep = 0;
-
-function openTut(tut) {
-  currentTut  = tut;
-  currentStep = 0;
-  document.getElementById('tut-modal-title').textContent = tut.title;
-  tutModal.classList.add('open');
+function openTut(t) {
+  curTut  = t;
+  curStep = 0;
+  document.getElementById('modal-title').textContent = t.title;
+  tutOverlay.classList.add('open');
   renderStep();
 }
 
-function closeTutModal() { tutModal.classList.remove('open'); }
+function closeModal() { tutOverlay.classList.remove('open'); }
 
 function renderStep() {
-  const steps = currentTut.steps;
+  const steps = curTut.steps;
+  const W     = tutCanvas.width;
+  const H     = tutCanvas.height;
+
   // dots
   const dotsEl = document.getElementById('step-dots');
   dotsEl.innerHTML = '';
   steps.forEach((_, i) => {
     const d = document.createElement('div');
-    d.className = 'step-dot' + (i < currentStep ? ' done' : i === currentStep ? ' active' : '');
+    d.className = 'sdot' + (i < curStep ? ' done' : i === curStep ? ' active' : '');
     dotsEl.appendChild(d);
   });
 
-  // description — build all previous steps cumulatively
-  document.getElementById('step-desc').textContent = steps[currentStep].desc;
+  // description
+  document.getElementById('step-desc').textContent = steps[curStep].desc;
 
   // draw cumulatively
-  tutCtx.clearRect(0, 0, tutCanvas.width, tutCanvas.height);
-  for (let i = 0; i <= currentStep; i++) {
-    steps[i].draw(tutCtx);
+  tutCtx.clearRect(0, 0, W, H);
+  tutCtx.fillStyle = '#fffaf0';
+  tutCtx.fillRect(0, 0, W, H);
+  for (let i = 0; i <= curStep; i++) {
+    steps[i].draw(tutCtx, W, H);
   }
 
-  // nav buttons
-  document.querySelector('.btn-prev').disabled = currentStep === 0;
-  document.querySelector('.btn-next').textContent =
-    currentStep === steps.length - 1 ? '✅ Concluir' : 'Próximo ▶';
+  // next button label
+  document.getElementById('btn-next').textContent =
+    curStep === steps.length - 1 ? '✅ Concluir' : 'Próximo ▶';
+
+  document.querySelector('.btn-prev').disabled = curStep === 0;
 }
 
 function nextStep() {
-  if (currentStep < currentTut.steps.length - 1) {
-    currentStep++;
+  if (curStep < curTut.steps.length - 1) {
+    curStep++;
     renderStep();
   } else {
-    closeTutModal();
-    showCongrats();
+    closeModal();
+    document.getElementById('congrats-overlay').classList.add('open');
   }
 }
 
 function prevStep() {
-  if (currentStep > 0) { currentStep--; renderStep(); }
+  if (curStep > 0) { curStep--; renderStep(); }
 }
 
-function drawItMyself() {
-  closeTutModal();
-  showPage('draw');
+function drawMyself() {
+  closeModal();
+  showPage('draw', document.querySelectorAll('.tab-btn')[0]);
 }
 
-// ━━━━ CONGRATS ━━━━
-const congratsEl = document.getElementById('congrats');
-function showCongrats() { congratsEl.classList.add('open'); }
-
-function closeCongratsAndDraw() {
-  congratsEl.classList.remove('open');
-  showPage('draw');
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━
+// ════════════════════════════════════
+//  CONGRATS
+// ════════════════════════════════════
+function closeCongrats() {
+  document.getElementById('congrats-overlay').classList.remove('open
 
